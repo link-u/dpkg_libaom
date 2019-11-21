@@ -1,0 +1,3 @@
+[submodule "libaom-git"]
+	path = libaom-git
+	url = https://aomedia.googlesource.com/aom
