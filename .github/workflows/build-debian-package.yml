@@ -33,7 +33,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends debhelper debmake equivs
-          sudo mk-build-deps --install \
+          sudo mk-build-deps --install --remove \
                              --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' \
                              libaom/debian/control
 
