@@ -37,7 +37,7 @@ jobs:
                              --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' \
                              libaom/debian/control
 
-      - name: Build debian package
+      - name: Generate changelog
         shell: bash
         run: |
           cp "scripts/changelog_template" "libaom/debian/changelog"
