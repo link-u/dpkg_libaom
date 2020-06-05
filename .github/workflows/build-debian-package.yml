@@ -1,0 +1,112 @@
+name: Build debian package on push or release-tags or pull request.
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+        include:
+          - os: ubuntu-18.04
+            codename: bionic
+          - os: ubuntu-20.04
+            codename: focal
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Install debhelper dh-make, and dependent packages
+        shell: bash
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends debhelper debmake equivs
+          sudo mk-build-deps --install \
+                             --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' \
+                             libaom/debian/control
+
+      - name: Build debian package
+        shell: bash
+        run: |
+          cp "scripts/changelog_template" "libaom/debian/changelog"
+          # replace date
+          sed -i -r "s/%DATE%/$(LC_ALL=C TZ=JST-9 date '+%a, %d %b %Y %H:%M:%S %z')/g" libaom/debian/changelog
+
+          # set debian package version
+          version=$(git -C libaom describe --tags "HEAD^" | sed 's/\(.*\)-.*/\1/')+patch
+          dpkg_version=${version:1}.$(TZ=JST-9 date +%Y%m%d)+${{ matrix.codename }}
+          echo "::set-output name=version::${dpkg_version}"
+          sed -i -r "s/X.Y.Z-alpha/${dpkg_version}/g" libaom/debian/changelog
+
+      - name: Build debian package
+        shell: bash
+        run: bash scripts/build.sh
+
+      - name: Get debian package name
+        shell: bash
+        run: |
+          echo "::set-output name=filename::$(basename $(find libaom/ -type f -name \*.deb))"
+        id: get_deb_name
+
+      - name: Upload result
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.codename }}
+          path: libaom/${{ steps.get_deb_name.outputs.filename }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: true
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+  upload:
+    needs: release
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        codename: [bionic, focal]
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.codename }}
+          path: artifact
+      - name: Get debian package name
+        shell: bash
+        run: echo "::set-output name=filename::$(basename $(find artifact/ -type f -name \*.deb))"
+        id: get_deb_name
+      - name: Upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: artifact/${{ steps.get_deb_name.outputs.filename }}
+          asset_name: ${{ steps.get_deb_name.outputs.filename }}
+          asset_content_type: application/vnd.debian.binary-package

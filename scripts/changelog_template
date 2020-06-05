@@ -1,0 +1,5 @@
+libaom (X.Y.Z-alpha) unstable; urgency=medium
+
+  * Initial release - see https://github.com/link-u/dpkg_libaom/releases for more details
+
+ -- Ryo Hirafuji <ryo.hirafuji@link-u.co.jp>  %DATE%
