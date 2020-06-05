@@ -54,17 +54,11 @@ jobs:
         shell: bash
         run: bash scripts/build.sh
 
-      - name: Get debian package name
-        shell: bash
-        run: |
-          echo "::set-output name=filename::$(basename $(find libaom/ -type f -name \*.deb))"
-        id: get_deb_name
-
       - name: Upload result
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.codename }}
-          path: libaom/${{ steps.get_deb_name.outputs.filename }}
+          path: "*.deb"
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
