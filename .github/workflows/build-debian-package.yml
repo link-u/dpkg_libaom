@@ -30,7 +30,7 @@ jobs:
 
       - name: Build debian package
         shell: bash
-        run: bash scripts/build.sh
+        run: bash scripts/all.sh
 
       - name: Upload result
         uses: actions/upload-artifact@v2
