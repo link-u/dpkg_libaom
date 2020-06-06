@@ -8,9 +8,8 @@ cd ..
 
 bash scripts/create_changelog.sh
 
-sudo apt-get install -y --no-install-recommends devscripts debmake equivs
 # install dependencies
-sudo mk-build-deps --install --remove \
+mk-build-deps --install --remove \
   --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' \
   libaom/debian/control
 
