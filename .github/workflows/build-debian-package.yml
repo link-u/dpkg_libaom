@@ -28,28 +28,6 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      - name: Install debhelper dh-make, and dependent packages
-        shell: bash
-        run: |
-          sudo apt update
-          sudo apt install -y --no-install-recommends debhelper debmake equivs
-          sudo mk-build-deps --install --remove \
-                             --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' \
-                             libaom/debian/control
-
-      - name: Generate changelog
-        shell: bash
-        run: |
-          cp "scripts/changelog_template" "libaom/debian/changelog"
-          # replace date
-          sed -i -r "s/%DATE%/$(LC_ALL=C TZ=JST-9 date '+%a, %d %b %Y %H:%M:%S %z')/g" libaom/debian/changelog
-
-          # set debian package version
-          version=$(git -C libaom describe --tags "HEAD^" | sed 's/\(.*\)-.*/\1/')+patch
-          dpkg_version=${version:1}.$(TZ=JST-9 date +%Y%m%d)+${{ matrix.codename }}
-          echo "::set-output name=version::${dpkg_version}"
-          sed -i -r "s/X.Y.Z-alpha/${dpkg_version}/g" libaom/debian/changelog
-
       - name: Build debian package
         shell: bash
         run: bash scripts/build.sh
@@ -63,7 +41,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Create release
         id: create_release
@@ -80,7 +58,7 @@ jobs:
 
   upload:
     needs: release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         codename: [bionic, focal]

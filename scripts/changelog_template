@@ -1,4 +1,4 @@
-libaom (X.Y.Z-alpha) unstable; urgency=medium
+libaom (%VERSION%) unstable; urgency=medium
 
   * Initial release - see https://github.com/link-u/dpkg_libaom/releases for more details
 
