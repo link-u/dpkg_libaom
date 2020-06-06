@@ -8,6 +8,7 @@ cd ..
 
 bash scripts/create_changelog.sh
 
+apt-get install -y --no-install-recommends devscripts debmake equivs
 # install dependencies
 mk-build-deps --install --remove \
   --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' \
