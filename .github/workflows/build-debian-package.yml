@@ -13,15 +13,10 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
-        include:
-          - os: ubuntu-18.04
-            codename: bionic
-          - os: ubuntu-20.04
-            codename: focal
+        codename: [bionic, focal]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -29,8 +24,10 @@ jobs:
           fetch-depth: 0
 
       - name: Build debian package
-        shell: bash
-        run: bash scripts/all.sh
+        uses: link-u/execute-on-separated-ubuntu@master
+        with:
+          script: scripts/all.sh
+          on: ${{ matrix.codename }}
 
       - name: Upload result
         uses: actions/upload-artifact@v2
